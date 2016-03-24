@@ -21,7 +21,7 @@ class TestDiskBalance(Tester):
         cluster.populate(4).start(wait_for_binary_proto=True)
         node1 = cluster.nodes['node1']
 
-        node1.stress(['write', 'n=100k', '-rate', 'threads=100', '-schema', 'replication(factor=2)'])
+        node1.stress(['write', 'n=250k', '-rate', 'threads=100', '-schema', 'replication(factor=2)'])
         cluster.flush()
         # make sure the data directories are balanced:
         for node in cluster.nodelist():
@@ -40,7 +40,7 @@ class TestDiskBalance(Tester):
         cluster.populate(4).start(wait_for_binary_proto=True)
         node1 = cluster.nodes['node1']
 
-        node1.stress(['write', 'n=100k', '-rate', 'threads=100', '-schema', 'replication(factor=3)'])
+        node1.stress(['write', 'n=250k', '-rate', 'threads=100', '-schema', 'replication(factor=3)'])
         cluster.flush()
         node5 = new_node(cluster)
         node5.start(wait_for_binary_proto=True)
@@ -73,7 +73,7 @@ class TestDiskBalance(Tester):
         for node in cluster.nodelist():
             node.nodetool('disableautocompaction')
 
-        node1.stress(['write', 'n=100k', '-rate', 'threads=100', '-schema', 'replication(factor=2)'])
+        node1.stress(['write', 'n=250k', '-rate', 'threads=100', '-schema', 'replication(factor=2)'])
         cluster.flush()
 
         node4.decommission()
