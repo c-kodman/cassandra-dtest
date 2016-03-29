@@ -167,11 +167,13 @@ class TestHelper(Tester):
     def query_counter(self, session, id, val, consistency, check_ret=True):
         statement = SimpleStatement("SELECT * from counters WHERE id = %d" % (id,), consistency_level=consistency)
         res = session.execute(statement)
-        expected = [[id, val]] if val else []
-        ret = rows_to_list(res) == expected
+        ret = rows_to_list(res)
         if check_ret:
-            assert ret, "Got %s from %s, expected %s at %s" % (res, session.cluster.contact_points, expected, self._name(consistency))
-        return ret
+            assert ret[0][1] == val, "Got %s from %s, expected %s at %s" % (ret[0][1],
+                                                                            session.cluster.contact_points,
+                                                                            val,
+                                                                            self._name(consistency))
+        return ret[0][1] if ret else 0
 
     def read_counter(self, session, id, consistency):
         """
@@ -179,8 +181,8 @@ class TestHelper(Tester):
         because after the next update the counter will become one.
         """
         statement = SimpleStatement("SELECT c from counters WHERE id = %d" % (id,), consistency_level=consistency)
-        res = rows_to_list(session.execute(statement))
-        return res[0][0] if res else 0
+        ret = rows_to_list(session.execute(statement))
+        return ret[0][0] if ret else 0
 
 
 class TestAvailability(TestHelper):
@@ -375,8 +377,8 @@ class TestAccuracy(TestHelper):
             self.read_cl = read_cl
             self.serial_cl = serial_cl
 
-            outer.log('Testing accuracy for %s/%s/%s (keys : %d to %d)'
-                      % (outer._name(write_cl), outer._name(read_cl), outer._name(serial_cl), start, end))
+            outer.log('Testing accuracy with WRITE/READ/SERIAL consistency set to %s/%s/%s (keys : %d to %d)'
+                      % (outer._name(write_cl), outer._name(read_cl), outer._name(serial_cl), start, end - 1))
 
         def get_num_nodes(self, idx):
             """
@@ -393,7 +395,7 @@ class TestAccuracy(TestHelper):
             for i in xrange(1, len(nodes)):
                 if idx < sum(nodes[:i]):
                     break
-                dc = dc + 1
+                dc += 1
 
             if write_cl == ConsistencyLevel.EACH_QUORUM:
                 write_nodes = sum([outer._required_nodes(write_cl, rf_factors, i) for i in range(0, len(nodes))])
@@ -425,7 +427,7 @@ class TestAccuracy(TestHelper):
                 num = 0
                 for s in sessions:
                     if outer.query_user(s, n, val, read_cl, check_ret=strong_consistency):
-                        num = num + 1
+                        num += 1
                 assert num >= write_nodes, \
                     "Failed to read value from sufficient number of nodes, required %d but  got %d - [%d, %s]" \
                     % (write_nodes, num, n, val)
@@ -436,11 +438,11 @@ class TestAccuracy(TestHelper):
                     outer.insert_user(sessions[s], n, age, write_cl, serial_cl)
                     check_all_sessions(s, n, age)
                     if serial_cl is None:
-                        age = age + 1
+                        age += 1
                 for s in range(0, len(sessions)):
                     outer.update_user(sessions[s], n, age, write_cl, serial_cl, age - 1)
                     check_all_sessions(s, n, age)
-                    age = age + 1
+                    age += 1
                 outer.delete_user(sessions[0], n, write_cl)
                 check_all_sessions(s, n, None)
 
@@ -464,7 +466,7 @@ class TestAccuracy(TestHelper):
                 num = 0
                 for s in sessions:
                     if outer.query_counter(s, n, val, read_cl, check_ret=strong_consistency):
-                        num = num + 1
+                        num += 1
                 assert num >= write_nodes, \
                     "Failed to read value from sufficient number of nodes, required %d but got %d - [%d, %s]" \
                     % (write_nodes, num, n, val)
@@ -472,9 +474,11 @@ class TestAccuracy(TestHelper):
             for n in xrange(start, end):
                 c = outer.read_counter(sessions[0], n, ConsistencyLevel.ALL)
                 for s in range(0, len(sessions)):
-                    c = c + 1
+                    c += 1
                     outer.update_counter(sessions[s], n, write_cl, serial_cl)
                     check_all_sessions(s, n, c)
+                    # Make sure all nodes are on the same page since a counter update requires a read
+                    c = outer.query_counter(sessions[0], n, c, ConsistencyLevel.ALL)
 
     def _run_test_function_in_parallel(self, valid_fcn, nodes, rf_factors, combinations):
         """
@@ -499,7 +503,7 @@ class TestAccuracy(TestHelper):
         num_keys = 50
         for combination in combinations:
             input_queue.put((start, start + num_keys) + combination)
-            start = start + num_keys
+            start += num_keys
 
         threads = []
         for n in range(0, 8):
@@ -515,8 +519,10 @@ class TestAccuracy(TestHelper):
                 break
 
         if not exceptions_queue.empty():
-            traceback.print_exception(*exceptions_queue.get())
-            assert False, "Look for an exception above"
+            err_type, err, err_traceback = exceptions_queue.get()
+            debug("Failed with exception {}: {}".format(err_type, err.message))
+            traceback.print_exception(err_type, err, err_traceback)
+            assert False, err.message
 
     def test_simple_strategy_users(self):
         """
