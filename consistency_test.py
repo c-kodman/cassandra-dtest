@@ -463,13 +463,12 @@ class TestAccuracy(TestHelper):
 
             def check_all_sessions(idx, n, val):
                 write_nodes, read_nodes, strong_consistency = self.get_num_nodes(idx)
-                num = 0
+                results = []
                 for s in sessions:
-                    if outer.query_counter(s, n, val, read_cl, check_ret=strong_consistency):
-                        num += 1
-                assert num >= write_nodes, \
-                    "Failed to read value from sufficient number of nodes, required %d but got %d - [%d, %s]" \
-                    % (write_nodes, num, n, val)
+                    results.append(outer.query_counter(s, n, val, read_cl, check_ret=strong_consistency))
+                assert results.count(val) >= write_nodes, \
+                    "Failed to read value from sufficient number of nodes, required %d nodes to have a counter " \
+                    "value of %s at key %d, instead got these values: %s" % (write_nodes, val, n, results)
 
             for n in xrange(start, end):
                 c = outer.read_counter(sessions[0], n, ConsistencyLevel.ALL)
