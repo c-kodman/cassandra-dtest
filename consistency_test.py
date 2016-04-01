@@ -92,7 +92,22 @@ class TestHelper(Tester):
         rf = self.rf
 
         cluster.set_configuration_options(values={'hinted_handoff_enabled': False})
-        cluster.populate(nodes).start(wait_for_binary_proto=True, wait_other_notice=True)
+        cluster.populate(nodes)
+
+        if isinstance(nodes, int):
+            # Changing the snitch from SimpleSnitch to PropertyFileSnitch even in the
+            # single dc tests ensures that StorageProxy sorts the replicas eligible
+            # for reading by proximity to the local host, essentially picking the
+            # local host for local reads, see IEndpointSnitch.sortByProximity() and
+            # StorageProxy.getLiveSortedEndpoints(), which is called by the AbstractReadExecutor
+            # to determine the target replicas
+            debug('Changing snitch for single dc case')
+            for node in cluster.nodelist():
+                node.data_center = 'dc1'
+            cluster.set_configuration_options(values={
+                'endpoint_snitch': 'org.apache.cassandra.locator.PropertyFileSnitch'})
+
+        cluster.start(wait_for_binary_proto=True, wait_other_notice=True)
 
         self.ksname = 'mytestks'
         session = self.patient_exclusive_cql_connection(cluster.nodelist()[0])
