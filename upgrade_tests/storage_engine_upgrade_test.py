@@ -12,6 +12,7 @@ LEGACY_SSTABLES_JVM_ARGS = ["-Dcassandra.streamdes.initial_mem_buffer_size=1",
 
 @since('3.0')
 class TestStorageEngineUpgrade(Tester):
+
     def setUp(self, bootstrap=False, jvm_args=None):
         super(TestStorageEngineUpgrade, self).setUp()
         self.default_install_dir = self.cluster.get_install_dir()

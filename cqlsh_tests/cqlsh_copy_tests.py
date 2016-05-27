@@ -20,6 +20,7 @@ from cassandra.murmur3 import murmur3
 from cassandra.util import SortedSet
 from ccmlib.common import is_win
 
+from assertionsn import assert_length_equal
 from cqlsh_tools import (DummyColorMap, assert_csvs_items_equal, csv_rows,
                          monkeypatch_driver, random_list, unmonkeypatch_driver,
                          write_rows_to_csv)
@@ -1748,7 +1749,7 @@ class CqlshCopyTest(Tester):
 
             imported_results = list(self.session.execute("SELECT * FROM testdatatype"))
 
-            assert len(imported_results) == 1
+            assert_length_equal(imported_results, 1)
 
             self.assertEqual(exported_results, imported_results)
 
@@ -1790,7 +1791,7 @@ class CqlshCopyTest(Tester):
                                  .format(tempfile.name, trueval, falseval))
 
             imported_results = list(self.session.execute("SELECT * FROM testbooleans"))
-            assert len(imported_results) == 2
+            assert_length_equal(imported_results, 2)
             self.assertEqual(exported_results, imported_results)
 
         self.prepare()
