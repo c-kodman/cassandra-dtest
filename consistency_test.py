@@ -186,9 +186,9 @@ class TestHelper(Tester):
         ret = rows_to_list(res)
         if check_ret:
             assert ret[0][1] == val, "Got {} from {}, expected {} at {}".format(ret[0][1],
-                                                                            session.cluster.contact_points,
-                                                                            val,
-                                                                            ConsistencyLevel.consistency_value_to_name(consistency))
+                                                                                session.cluster.contact_points,
+                                                                                val,
+                                                                                ConsistencyLevel.consistency_value_to_name(consistency))
         return ret[0][1] if ret else 0
 
     def read_counter(self, session, id, consistency):
