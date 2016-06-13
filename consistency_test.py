@@ -147,23 +147,23 @@ class TestHelper(Tester):
         session.execute(statement)
 
     def update_user(self, session, userid, age, consistency, serial_consistency=None, prev_age=None):
-        text = "UPDATE users SET age = %d WHERE userid = %d" % (age, userid)
+        text = "UPDATE users SET age = {} WHERE userid = {}".format(age, userid)
         if serial_consistency and prev_age:
-            text = text + " IF age = %d" % (prev_age)
+            text = text + " IF age = {}".format(prev_age)
         statement = SimpleStatement(text, consistency_level=consistency, serial_consistency_level=serial_consistency)
         session.execute(statement)
 
     def delete_user(self, session, userid, consistency):
-        statement = SimpleStatement("DELETE FROM users where userid = %d" % (userid,), consistency_level=consistency)
+        statement = SimpleStatement("DELETE FROM users where userid = {}".format(userid,), consistency_level=consistency)
         session.execute(statement)
 
     def query_user(self, session, userid, age, consistency, check_ret=True):
-        statement = SimpleStatement("SELECT userid, age FROM users where userid = %d" % (userid,), consistency_level=consistency)
+        statement = SimpleStatement("SELECT userid, age FROM users where userid = {}".format(userid,), consistency_level=consistency)
         res = session.execute(statement)
         expected = [[userid, age]] if age else []
         ret = rows_to_list(res) == expected
-        if check_ret:
-            assert ret, "Got %s from %s, expected %s at %s" % (rows_to_list(res), session.cluster.contact_points, expected, self._name(consistency))
+
+        assert ret, "Got {} from {}, expected {} at {}".format(rows_to_list(res), session.cluster.contact_points, expected, ConsistencyLevel.consistency_value_to_name(consistency))
         return ret
 
     def create_counters_table(self, session):
@@ -175,20 +175,20 @@ class TestHelper(Tester):
         """)
 
     def update_counter(self, session, id, consistency, serial_consistency=None):
-        text = "UPDATE counters SET c = c + 1 WHERE id = %d" % (id,)
+        text = "UPDATE counters SET c = c + 1 WHERE id = {}".format(id,)
         statement = SimpleStatement(text, consistency_level=consistency, serial_consistency_level=serial_consistency)
         session.execute(statement)
         return statement
 
     def query_counter(self, session, id, val, consistency, check_ret=True):
-        statement = SimpleStatement("SELECT * from counters WHERE id = %d" % (id,), consistency_level=consistency)
+        statement = SimpleStatement("SELECT * from counters WHERE id = {}".format(id,), consistency_level=consistency)
         res = session.execute(statement)
         ret = rows_to_list(res)
         if check_ret:
-            assert ret[0][1] == val, "Got %s from %s, expected %s at %s" % (ret[0][1],
+            assert ret[0][1] == val, "Got {} from {}, expected {} at {}".format(ret[0][1],
                                                                             session.cluster.contact_points,
                                                                             val,
-                                                                            self._name(consistency))
+                                                                            ConsistencyLevel.consistency_value_to_name(consistency))
         return ret[0][1] if ret else 0
 
     def read_counter(self, session, id, consistency):
@@ -256,7 +256,7 @@ class TestAvailability(TestHelper):
         cluster = self.cluster
 
         self.log("Connected to %s for %s/%s/%s" %
-                 (session.cluster.contact_points, self._name(write_cl), self._name(read_cl), self._name(serial_cl)))
+                 (session.cluster.contact_points, ConsistencyLevel.consistency_value_to_name(write_cl), ConsistencyLevel.consistency_value_to_name(read_cl), ConsistencyLevel.consistency_value_to_name(serial_cl)))
 
         start = 0
         end = 100
@@ -396,8 +396,8 @@ class TestAccuracy(TestHelper):
             self.read_cl = read_cl
             self.serial_cl = serial_cl
 
-            outer.log('Testing accuracy with WRITE/READ/SERIAL consistency set to %s/%s/%s (keys : %d to %d)'
-                      % (outer._name(write_cl), outer._name(read_cl), outer._name(serial_cl), start, end - 1))
+            outer.log('Testing accuracy with WRITE/READ/SERIAL consistency set to {}/{}/{} (keys : {} to {})'
+                      .format(ConsistencyLevel.consistency_value_to_name(write_cl)), ConsistencyLevel.consistency_value_to_name(read_cl), ConsistencyLevel.consistency_value_to_name(serial_cl), start, end - 1)
 
         def get_num_nodes(self, idx):
             """
@@ -486,8 +486,8 @@ class TestAccuracy(TestHelper):
                 for s in sessions:
                     results.append(outer.query_counter(s, n, val, read_cl, check_ret=strong_consistency))
                 assert results.count(val) >= write_nodes, \
-                    "Failed to read value from sufficient number of nodes, required %d nodes to have a counter " \
-                    "value of %s at key %d, instead got these values: %s" % (write_nodes, val, n, results)
+                    "Failed to read value from sufficient number of nodes, required {} nodes to have a counter " \
+                    "value of {} at key {}, instead got these values: {}".format(write_nodes, val, n, results)
 
             for n in xrange(start, end):
                 c = outer.read_counter(sessions[0], n, ConsistencyLevel.ALL)
