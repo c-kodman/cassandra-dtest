@@ -17,6 +17,7 @@ import threading
 import time
 import traceback
 import types
+import glob
 from collections import OrderedDict
 from unittest import TestCase
 
@@ -463,6 +464,18 @@ class Tester(TestCase):
             # catch to raise an exception with useful information
             thread.interrupt_main()
 
+    """
+    Finds files matching the glob pattern specified as argument on
+    the given keyspace in all nodes
+    """
+    def glob_data_dirs(self, path, ks="ks"):
+        result = []
+        for node in self.cluster.nodelist():
+            for data_dir in node.data_directories():
+                ks_dir = os.path.join(data_dir, ks, path)
+                result.extend(glob.glob(ks_dir))
+        return result
+
     def _catch_interrupt(self, signal, frame):
         """
         Signal handler for registering on SIGINT.
@@ -488,16 +501,24 @@ class Tester(TestCase):
             name = os.path.join(directory, name)
         if not os.path.exists(directory):
             os.mkdir(directory)
-        logs = [(node.name, node.logfilename(), node.debuglogfilename()) for node in self.cluster.nodes.values()]
+        logs = [(node.name, node.logfilename(), node.debuglogfilename(), node.gclogfilename(), node.compactionlogfilename()) for node in self.cluster.nodes.values()]
         if len(logs) is not 0:
             basedir = str(int(time.time() * 1000)) + '_' + self.id()
             logdir = os.path.join(directory, basedir)
             os.mkdir(logdir)
-            for n, log, debuglog in logs:
+            for n, log, debuglog, gclog, compactionlog in logs:
                 if os.path.exists(log):
+                    self.assertGreaterEqual(os.path.getsize(log), 0)
                     shutil.copyfile(log, os.path.join(logdir, n + ".log"))
                 if os.path.exists(debuglog):
+                    self.assertGreaterEqual(os.path.getsize(debuglog), 0)
                     shutil.copyfile(debuglog, os.path.join(logdir, n + "_debug.log"))
+                if os.path.exists(gclog):
+                    self.assertGreaterEqual(os.path.getsize(gclog), 0)
+                    shutil.copyfile(gclog, os.path.join(logdir, n + "_gc.log"))
+                if os.path.exists(compactionlog):
+                    self.assertGreaterEqual(os.path.getsize(compactionlog), 0)
+                    shutil.copyfile(compactionlog, os.path.join(logdir, n + "_compaction.log"))
             if os.path.exists(name):
                 os.unlink(name)
             if not is_win():
