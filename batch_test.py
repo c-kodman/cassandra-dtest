@@ -7,7 +7,7 @@ from cassandra.query import SimpleStatement
 
 from assertions import assert_invalid, assert_one, assert_unavailable
 from dtest import CASSANDRA_DIR, Tester, debug
-from tools import since
+from tools import since, known_failure
 
 
 class TestBatch(Tester):
@@ -308,6 +308,9 @@ class TestBatch(Tester):
 
     @since('3.0', max_version='3.0.x')
     @skipIf(sys.platform == 'win32', 'Windows production support only on 2.2+')
+    @known_failure(failure_source='test',
+                   jira_url='https://issues.apache.org/jira/browse/CASSANDRA-12038',
+                   flaky=True)
     def logged_batch_compatibility_3_test(self):
         """
         @jira_ticket CASSANDRA-9673, test that logged batches still work with a mixed version cluster.
