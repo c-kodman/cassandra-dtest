@@ -86,7 +86,7 @@ class TestReadRepair(Tester):
         for n in self.cluster.nodelist():
             debug("Checking " + n.name)
             session = self.patient_exclusive_cql_connection(n)
-            assert_all(session, query, [[1, 1, 1]], cl=ConsistencyLevel.ONE)
+            assert_one(session, query, [1, 1, 1], cl=ConsistencyLevel.ONE)
 
     def identify_initial_placement(self, keyspace, table, key):
         nodes = self.cluster.nodelist()
