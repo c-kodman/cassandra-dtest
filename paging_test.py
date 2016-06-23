@@ -1001,7 +1001,7 @@ class TestPagingData(BasePagingTester, PageAssertionMixin):
             assert_all(session, "SELECT * FROM test WHERE a= 0 AND c >= 1 AND c <=2 ALLOW FILTERING", [[0, 1, 0, 1, 1],
                                                                                                        [0, 2, 0, 2, 2]])
 
-            assert_one(session, "SELECT * FROM test WHERE a = 0 AND c >= 1 AND d = 1 ALLOW FILTERING", [[0, 1, 0, 1, 1]])
+            assert_one(session, "SELECT * FROM test WHERE a = 0 AND c >= 1 AND d = 1 ALLOW FILTERING", [0, 1, 0, 1, 1])
 
             assert_all(session, "SELECT * FROM test WHERE a = 3 AND c >= 1 AND s > 1 ALLOW FILTERING", [[3, 1, 3, 1, 4],
                                                                                                         [3, 2, 3, 2, 5],
@@ -1092,11 +1092,7 @@ class TestPagingData(BasePagingTester, PageAssertionMixin):
                                                                                                                                   [4, 7, 8, 9],
                                                                                                                                   [4, 8, 9, 10]])
 
-            assert_all(session, "SELECT * FROM test WHERE cnt = 5 ALLOW FILTERING", [[0, 3, 4, 5],
-                                                                                     [1, 3, 4, 5],
-                                                                                     [2, 3, 4, 5],
-                                                                                     [3, 3, 4, 5],
-                                                                                     [4, 3, 4, 5]])
+            assert_all(session, "SELECT * FROM test WHERE cnt = 5 ALLOW FILTERING", [[1, 3, 4, 5], [0, 3, 4, 5], [2, 3, 4, 5], [4, 3, 4, 5], [3, 3, 4, 5]])
 
             assert_all(session, "SELECT * FROM test WHERE a IN (1,2,3) AND cnt = 5 ALLOW FILTERING", [[1, 3, 4, 5],
                                                                                                       [2, 3, 4, 5],
@@ -1159,37 +1155,37 @@ class TestPagingData(BasePagingTester, PageAssertionMixin):
                                                                                              [1, 9, 10, 11],
                                                                                              [2, 9, 10, 11],
                                                                                              [3, 9, 10, 11],
-                                                                                             [4, 9, 10, 11]])
+                                                                                             [4, 9, 10, 11]], ignore_order=True)
 
             assert_all(session, "SELECT * FROM test WHERE b > 4 AND b < 6 AND c > 3 ALLOW FILTERING", [[0, 5, 6, 7],
                                                                                                        [1, 5, 6, 7],
                                                                                                        [2, 5, 6, 7],
                                                                                                        [3, 5, 6, 7],
-                                                                                                       [4, 5, 6, 7]])
+                                                                                                       [4, 5, 6, 7]], ignore_order=True)
 
             assert_all(session, "SELECT * FROM test WHERE d = 5 ALLOW FILTERING", [[0, 3, 4, 5],
                                                                                    [1, 3, 4, 5],
                                                                                    [2, 3, 4, 5],
                                                                                    [3, 3, 4, 5],
-                                                                                   [4, 3, 4, 5]])
+                                                                                   [4, 3, 4, 5]], ignore_order=True)
 
             assert_all(session, "SELECT * FROM test WHERE (b, c) > (4, 3) AND (b, c) < (5, 6) ALLOW FILTERING", [[0, 4, 5, 6],
                                                                                                                  [1, 4, 5, 6],
                                                                                                                  [2, 4, 5, 6],
                                                                                                                  [3, 4, 5, 6],
-                                                                                                                 [4, 4, 5, 6]])
+                                                                                                                 [4, 4, 5, 6]], ignore_order=True)
 
             assert_all(session, "SELECT * FROM test WHERE (b, c) > (2, 3) AND b < 4 ALLOW FILTERING", [[0, 3, 4, 5],
                                                                                                        [1, 3, 4, 5],
                                                                                                        [2, 3, 4, 5],
                                                                                                        [3, 3, 4, 5],
-                                                                                                       [4, 3, 4, 5]])
+                                                                                                       [4, 3, 4, 5]], ignore_order=True)
 
             assert_all(session, "SELECT * FROM test where (b, c) > (2, 2) AND b < 8 AND d = 5 ALLOW FILTERING", [[0, 3, 4, 5],
                                                                                                                  [1, 3, 4, 5],
                                                                                                                  [2, 3, 4, 5],
                                                                                                                  [3, 3, 4, 5],
-                                                                                                                 [4, 3, 4, 5]])
+                                                                                                                 [4, 3, 4, 5]], ignore_order=True)
 
     @since('3.6')
     def test_paging_with_filtering_on_clustering_columns(self):
@@ -1227,61 +1223,61 @@ class TestPagingData(BasePagingTester, PageAssertionMixin):
                                                                                                 [1, 9, [10, 11], 12],
                                                                                                 [2, 9, [10, 11], 12],
                                                                                                 [3, 9, [10, 11], 12],
-                                                                                                [4, 9, [10, 11], 12]])
+                                                                                                [4, 9, [10, 11], 12]], ignore_order=True)
 
             assert_all(session, "SELECT * FROM test_map WHERE c CONTAINS KEY 10 ALLOW FILTERING", [[0, 9, {10: 11}, 12],
                                                                                                    [1, 9, {10: 11}, 12],
                                                                                                    [2, 9, {10: 11}, 12],
                                                                                                    [3, 9, {10: 11}, 12],
-                                                                                                   [4, 9, {10: 11}, 12]])
+                                                                                                   [4, 9, {10: 11}, 12]], ignore_order=True)
 
             assert_all(session, "SELECT * FROM test_list WHERE c CONTAINS 2 AND c CONTAINS 3 ALLOW FILTERING", [[0, 1, [2, 3], 4],
                                                                                                                 [1, 1, [2, 3], 4],
                                                                                                                 [2, 1, [2, 3], 4],
                                                                                                                 [3, 1, [2, 3], 4],
-                                                                                                                [4, 1, [2, 3], 4]])
+                                                                                                                [4, 1, [2, 3], 4]], ignore_order=True)
 
             assert_all(session, "SELECT * FROM test_map WHERE c CONTAINS KEY 2 AND c CONTAINS 3 ALLOW FILTERING", [[0, 1, {2: 3}, 4],
                                                                                                                    [1, 1, {2: 3}, 4],
                                                                                                                    [2, 1, {2: 3}, 4],
                                                                                                                    [3, 1, {2: 3}, 4],
-                                                                                                                   [4, 1, {2: 3}, 4]])
+                                                                                                                   [4, 1, {2: 3}, 4]], ignore_order=True)
 
             assert_all(session, "SELECT * FROM test_list WHERE c CONTAINS 2 AND d = 4 ALLOW FILTERING", [[0, 1, [2, 3], 4],
                                                                                                          [1, 1, [2, 3], 4],
                                                                                                          [2, 1, [2, 3], 4],
                                                                                                          [3, 1, [2, 3], 4],
-                                                                                                         [4, 1, [2, 3], 4]])
+                                                                                                         [4, 1, [2, 3], 4]], ignore_order=True)
 
             assert_all(session, "SELECT * FROM test_map WHERE c CONTAINS KEY 2 AND d = 4 ALLOW FILTERING", [[0, 1, {2: 3}, 4],
                                                                                                             [1, 1, {2: 3}, 4],
                                                                                                             [2, 1, {2: 3}, 4],
                                                                                                             [3, 1, {2: 3}, 4],
-                                                                                                            [4, 1, {2: 3}, 4]])
+                                                                                                            [4, 1, {2: 3}, 4]], ignore_order=True)
 
             assert_all(session, "SELECT * FROM test_list WHERE c CONTAINS 2 AND d = 4 ALLOW FILTERING", [[0, 1, [2, 3], 4],
                                                                                                          [1, 1, [2, 3], 4],
                                                                                                          [2, 1, [2, 3], 4],
                                                                                                          [3, 1, [2, 3], 4],
-                                                                                                         [4, 1, [2, 3], 4]])
+                                                                                                         [4, 1, [2, 3], 4]], ignore_order=True)
 
             assert_all(session, "SELECT * FROM test_map WHERE c CONTAINS KEY 2 AND d = 4 ALLOW FILTERING", [[0, 1, {2: 3}, 4],
                                                                                                             [1, 1, {2: 3}, 4],
                                                                                                             [2, 1, {2: 3}, 4],
                                                                                                             [3, 1, {2: 3}, 4],
-                                                                                                            [4, 1, {2: 3}, 4]])
+                                                                                                            [4, 1, {2: 3}, 4]], ignore_order=True)
 
             assert_all(session, "SELECT * FROM test_list WHERE c CONTAINS 2 AND d < 4 ALLOW FILTERING", [[0, 0, [1, 2], 3],
                                                                                                          [1, 0, [1, 2], 3],
                                                                                                          [2, 0, [1, 2], 3],
                                                                                                          [3, 0, [1, 2], 3],
-                                                                                                         [4, 0, [1, 2], 3]])
+                                                                                                         [4, 0, [1, 2], 3]], ignore_order=True)
 
             assert_all(session, "SELECT * FROM test_map WHERE c CONTAINS KEY 1 AND d < 4 ALLOW FILTERING", [[0, 0, {1: 2}, 3],
                                                                                                             [1, 0, {1: 2}, 3],
                                                                                                             [2, 0, {1: 2}, 3],
                                                                                                             [3, 0, {1: 2}, 3],
-                                                                                                            [4, 0, {1: 2}, 3]])
+                                                                                                            [4, 0, {1: 2}, 3]], ignore_order=True)
 
     @since('3.6')
     def test_paging_with_filtering_on_static_columns(self):
@@ -1305,12 +1301,12 @@ class TestPagingData(BasePagingTester, PageAssertionMixin):
             assert_all(session, "SELECT * FROM test WHERE s > 1 AND b > 8 ALLOW FILTERING", [[1, 9, 2, 10],
                                                                                              [2, 9, 3, 10],
                                                                                              [3, 9, 4, 10],
-                                                                                             [4, 9, 5, 10]])
+                                                                                             [4, 9, 5, 10]], ignore_order=True)
 
             assert_all(session, "SELECT * FROM test WHERE s > 1 AND b > 5 AND b < 7 ALLOW FILTERING", [[1, 6, 2, 7],
                                                                                                        [2, 6, 3, 7],
                                                                                                        [4, 6, 5, 7],
-                                                                                                       [3, 6, 4, 7]])
+                                                                                                       [3, 6, 4, 7]], ignore_order=True)
 
             assert_all(session, "SELECT * FROM test WHERE s > 1 AND a = 3 AND b > 4 ALLOW FILTERING", [[3, 5, 4, 6],
                                                                                                        [3, 6, 4, 7],
@@ -1370,12 +1366,6 @@ class TestPagingData(BasePagingTester, PageAssertionMixin):
                 session.default_fetch_size = page_size
 
                 # Range query
-                assert_all(session, "SELECT * FROM {}".format(table), [[1, 1],
-                                                                       [0, 0],
-                                                                       [2, 2],
-                                                                       [4, 4],
-                                                                       [3, 3]])
-
                 assert_all(session, "SELECT * FROM {}".format(table), [[1, 1],
                                                                        [0, 0],
                                                                        [2, 2],
@@ -1448,7 +1438,7 @@ class TestPagingData(BasePagingTester, PageAssertionMixin):
                                                                              [3, 0, 0],
                                                                              [3, 1, 1],
                                                                              [4, 0, 0],
-                                                                             [4, 1, 1]])
+                                                                             [4, 1, 1]], ignore_order=True)
 
             res = rows_to_list(session.execute("SELECT * FROM test PER PARTITION LIMIT 2 LIMIT 6"))
             assert_length_equal(res, 6)
